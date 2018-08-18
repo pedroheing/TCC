@@ -1,38 +1,34 @@
 import tensorflow as tf
 
+import utils
 from config import cfg
-from input import load_data
+from input import get_batch_data
 from modelo import ConvolutionalNeuralNetwork
 
 
 def avaliar():
-    with tf.name_scope("entrada/label"):
-        x = tf.placeholder(tf.float32, [None, 28, 28, 1])
-        y = tf.placeholder(tf.float32, [None, 10])
-
-    imagens, labels = load_data(cfg.dataset, False)
+    imagens, labels = get_batch_data(cfg.dataset, cfg.batch_size, cfg.num_threads, is_training=False)
 
     cnn = ConvolutionalNeuralNetwork()
 
-    logits = cnn.construir_arquitetura(x)
+    logits = cnn.construir_arquitetura(imagens)
 
-    custo = cnn.custo(logits, y)
-
-    accuracy = cnn.accuracy(logits, y)
+    accuracy = cnn.precisao(logits, labels)
 
     with tf.Session() as sess:
-        total_batch = len(imagens) // cfg.batch_size
+        total_batch = utils.get_tamanho_dataset(is_training=False) // cfg.batch_size
         avg_acc = 0.
         saver = tf.train.Saver()
         sess.run(tf.global_variables_initializer())
-        saver.restore(sess, "Output/model.ckpt")
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
+        saver.restore(sess, cfg.results + "/model.ckpt")
         for batch in range(total_batch):
-            batch_x = imagens[batch * cfg.batch_size:min((batch + 1) * cfg.batch_size, len(imagens))]
-            batch_y = labels[batch * cfg.batch_size:min((batch + 1) * cfg.batch_size, len(labels))]
-
-            acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
+            acc = sess.run(accuracy)
             avg_acc += acc / total_batch
         print("accuracy: {:.5f}".format(avg_acc))
+        coord.request_stop()
+        coord.join(threads)
 
 
 def main(argv=None):

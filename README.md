@@ -10,7 +10,7 @@ As seguinte instruções podem ser utilizadas para utilizar este projeto em sua 
 
 ## Pré-requisitos
 Para utilizar o projeto é necessário ter instalado a biblioteca tensorflow, o tutorial para sua instalação
-nos sistemas ubuntu, mac e windows podem ser encontrado em:
+nos sistemas operacionais ubuntu, mac e windows pode ser encontrado em:
 ```
 https://www.tensorflow.org/install
 ```
@@ -29,17 +29,17 @@ Em progreso.
 
 ## Licença
 Este projeto está licenciado utilizando a licença MIT, que permite:
-* Uso comercial
-* Modificação
-* Distribuição
-* Uso privado
+* :white_check_mark: Uso comercial
+* :white_check_mark: Modificação
+* :white_check_mark: Distribuição
+* :white_check_mark: Uso privado
 
 e limita:
 
-* Responsabilidade
-* Garantia
+* :x: Responsabilidade
+* :x: Garantia
 
 para mais detalhes, por favor verifive o arquivo [LICENSE](./LICENSE).
 
 ## Reconhecimento
-Para criação deste projeto foi utilizado como referência o [tutoral de CNN avançado do Tensorflow](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10).
+Para criação deste projeto foi utilizado como referência o [tutorial de CNN avançado do Tensorflow](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10).

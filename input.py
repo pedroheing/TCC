@@ -8,7 +8,7 @@ from skimage import transform
 from tensorflow.examples.tutorials.mnist import input_data
 
 with tf.name_scope("read_fashionMNIST"):
-    def _read_fashionMNIST(is_training=True):
+    def __read_fashionMNIST(is_training=True):
         """
         Returns:
             Os conjuntos de dados de treino ou teste
@@ -55,13 +55,13 @@ with tf.name_scope("read_trafficSigns_2"):
         return images, labels
 
 with tf.name_scope("read_trafficSigns"):
-    def _read_trafficSigns(is_training=True):
-        data_directory = "C:\\Users\\pedro\\Desktop\\bases\\"
+    def __read_trafficSigns(is_training=True):
+        data_directory = "data/traffic/"
 
         if is_training:
-            data_directory += "training"
+            data_directory += "Training"
         elif not is_training:
-            data_directory += "test"
+            data_directory += "Testing"
 
         directories = [d for d in os.listdir(data_directory)
                        if os.path.isdir(os.path.join(data_directory, d))]
@@ -80,21 +80,29 @@ with tf.name_scope("read_trafficSigns"):
 with tf.name_scope("load_data"):
     def load_data(dataset, is_training=True):
         if dataset == 'fashionMNIST':
-            return _read_fashionMNIST(is_training)
+            return __read_fashionMNIST(is_training)
         elif dataset == 'traffic_sign':
-            data, label = _read_trafficSigns(is_training)
+            data, label = __read_trafficSigns(is_training)
             data = [transform.resize(image, (28, 28)) for image in data]
             data = np.array(data)
-            return tf.image.rgb_to_grayscale(data), label
+            labels = tf.one_hot(label, depth=62, dtype=tf.float32)
+            return tf.image.rgb_to_grayscale(data), labels
         else:
             raise Exception('Dataset inválido, por favor confirme o nome do dataset:', dataset)
 
+with tf.name_scope("get_batch_data"):
+    def get_batch_data(dataset, batch_size, num_threads, is_training=True):
+        dados, labels = load_data(dataset, is_training)
+        dados = tf.cast(dados, tf.float32)
+        data_queues = tf.train.slice_input_producer([dados, labels])
 
-def get_batch_data(dataset, batch_size, num_threads):
-    dados, labels = load_data(dataset, True)
-    # labels = tf.one_hot(label, depth=10, dtype=tf.float32)
-    data_queues = tf.train.slice_input_producer([dados, labels])
-    x, y = tf.train.shuffle_batch(data_queues, num_threads=num_threads, batch_size=batch_size, capacity=batch_size * 64,
-                                  min_after_dequeue=batch_size * 32, allow_smaller_final_batch=False)
-    tf.summary.image('images', x)
-    return x, y
+        if is_training:
+            x, y = tf.train.shuffle_batch(data_queues, num_threads=num_threads, batch_size=batch_size,
+                                          capacity=batch_size * 64,
+                                          min_after_dequeue=batch_size * 32, allow_smaller_final_batch=False)
+        else:
+            x, y = tf.train.batch(data_queues, num_threads=num_threads, batch_size=batch_size, capacity=batch_size * 64,
+                                  allow_smaller_final_batch=False)
+
+        tf.summary.image('images', x)
+        return x, y
