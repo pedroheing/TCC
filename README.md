@@ -4,30 +4,30 @@ Ciência da Computação do Instituto de Educação Superior da Grande Florianó
 objetivo de desenvolver e avaliar os dois modelos com as bases de dados [FashionMNIST](https://github.com/zalandoresearch/fashion-mnist)
  e [BelgiumTS](https://btsd.ethz.ch/shareddata).
 
-##Utilizando o projeto
+## Utilizando o projeto
 
 As seguinte instruções podem ser utilizadas para utilizar este projeto em sua máquina local.
 
-##Pré-requisitos
+## Pré-requisitos
 Para utilizar o projeto é necessário ter instalado a biblioteca tensorflow, o tutorial para sua instalação
 nos sistemas ubuntu, mac e windows podem ser encontrado em:
 ```
 https://www.tensorflow.org/install
 ```
 
-##Instalação
+## Instalação
 Após realizar a instalação da biblioteca instale os requerimentos utilizando o pip no arquivo requirements.txt
 ```
 sudo pip3 install requirements.txt
 ```
 
-##Utilizando o projeto
+## Utilizando o projeto
 Em progreso.
 
-##Resultados obtidos
+## Resultados obtidos
 Em progreso.
 
-##Licença
+## Licença
 Este projeto está licenciado utilizando a licença MIT, que permite:
 * Uso comercial
 * Modificação
@@ -39,7 +39,7 @@ e limita:
 * Responsabilidade
 * Garantia
 
-para mais detalhes, por favor verifive o arquivo [LICENSE](LICENSE.txt).
+para mais detalhes, por favor verifive o arquivo [LICENSE](./LICENSE).
 
-##Reconhecimento
+## Reconhecimento
 Para criação deste projeto foi utilizado como referência o [tutoral de CNN avançado do Tensorflow](https://github.com/tensorflow/models/tree/master/tutorials/image/cifar10).
