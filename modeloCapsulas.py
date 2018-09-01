@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 import capslayer as cl
+from config import cfg
 
 
 class CapsNet(object):
@@ -28,8 +29,11 @@ class CapsNet(object):
             probs: Tensor with shape [batch_size, num_label], the probability of entity presence.
         """
         self.raw_imgs = inputs
-        self.labels_one_hoted = tf.reshape(labels, (-1, 10, 1, 1))
+        self.labels_one_hoted = tf.reshape(labels, (-1, self.num_label, 1, 1))
         self.labels = tf.argmax(labels, 1)
+
+        tf.summary.image("imagem_entrada", inputs, cfg.batch_size)
+
         with tf.variable_scope('Conv1_layer'):
             # Conv1, return with shape [batch_size, 20, 20, 256]
             inputs = tf.reshape(self.raw_imgs, shape=[-1, self.height, self.width, self.channels])
@@ -74,25 +78,31 @@ class CapsNet(object):
                                               activation=tf.sigmoid)
             recon_imgs = tf.reshape(self.recon_imgs, shape=[-1, self.height, self.width, self.channels])
 
+            tf.summary.image("imagens_reconstruidas", recon_imgs, cfg.batch_size)
+
         with tf.variable_scope('accuracy'):
             logits_idx = tf.to_int32(tf.argmax(cl.softmax(self.probs, axis=1), 1))
             correct_prediction = tf.equal(tf.to_int32(self.labels), logits_idx)
             correct = tf.reduce_sum(tf.cast(correct_prediction, tf.float32))
             self.accuracy = tf.reduce_mean(correct / tf.cast(tf.shape(self.probs)[0], tf.float32))
 
+            tf.summary.scalar("precisao", self.accuracy)
+
         return self.poses, self.probs
 
     def _loss(self):
-        with tf.variable_scope("loss"):
+        with tf.variable_scope("custo"):
             # 1. Margin loss
             margin_loss = cl.losses.margin_loss(logits=self.probs,
                                                 labels=tf.squeeze(self.labels_one_hoted, axis=(2, 3)))
 
+            tf.summary.scalar("custo_classificacao", margin_loss)
             # 2. The reconstruction loss
             orgin = tf.reshape(self.raw_imgs, shape=(-1, self.height * self.width * self.channels))
             squared = tf.square(self.recon_imgs - orgin)
             reconstruction_err = tf.reduce_mean(squared)
 
+            tf.summary.scalar("custo_reconstrucao", reconstruction_err)
             # 3. Total loss
             # The paper uses sum of squared error as reconstruction error, but we
             # have used reduce_mean in `# 2 The reconstruction loss` to calculate
@@ -100,12 +110,14 @@ class CapsNet(object):
             # regularization scale should be 0.0005*784=0.392
             total_loss = margin_loss + 0.392 * reconstruction_err
 
+            tf.summary.scalar("custo_total", total_loss)
             return total_loss
 
     def train(self):
-        self.global_step = tf.Variable(1, name='global_step', trainable=False)
+        self.global_step = tf.train.get_or_create_global_step()
         total_loss = self._loss()
         optimizer = tf.train.AdamOptimizer()
         train_ops = optimizer.minimize(total_loss, global_step=self.global_step)
+        summary_ops = tf.summary.merge_all()
 
-        return (total_loss, train_ops)
+        return (total_loss, train_ops, summary_ops)
