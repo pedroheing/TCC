@@ -5,8 +5,12 @@ from config import cfg
 
 class ConvolutionalNeuralNetwork():
 
-    def __init__(self):
-        self.__definir_hyperparametros()
+    def __init__(self, num_canais, num_caracteristicas, num_classes):
+        self.num_canais = num_canais
+        self.num_caracteristicas = num_caracteristicas
+        self.num_classes = num_classes
+
+    # self.__definir_hyperparametros()
 
     def __definir_hyperparametros(self):
         self.num_canais = 1
@@ -89,7 +93,7 @@ class ConvolutionalNeuralNetwork():
             tf.summary.scalar("precisao", accuracy)
             return accuracy
 
-    with tf.name_scope("__criar_variavel"):
+    with tf.name_scope("criar_variavel"):
         def __criar_variavel(self, nome, shape):
             variavel = tf.get_variable(name=nome, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
             tf.summary.histogram(nome, variavel)
