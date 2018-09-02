@@ -22,8 +22,11 @@ def train():
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         sess.run(iterator.initializer)
-        summary_writer = tf.summary.FileWriter(cfg.results + '/treinamentoCapsulas', sess.graph)
+        saver = tf.train.Saver()
+        summary_writer = tf.summary.FileWriter(utils.get_caminho_resultado(True, False), sess.graph)
         total_batch = num_input // cfg.batch_size
+        colunas = ["Epoch", "Custo", "Precisao"]
+        resultado = []
         for i in range(cfg.epoch):
             avg_cost = 0.
             avg_acc = 0.
@@ -33,8 +36,15 @@ def train():
                 summary_writer.add_summary(summary, step)
                 avg_cost += custo / total_batch
                 avg_acc += acc / total_batch
+            resultado.append([i + 1, avg_cost, avg_acc])
             print("Epoch " + str(i) + ", Custo= {:.6f}".format(avg_cost) + ", Precisao do treinamento= {:.5f}".format(
                 avg_acc))
+        caminho = utils.salvar_resultados(colunas, resultado, True, False)
+        print("CSV salvo em {}".format(caminho))
+        save_path = saver.save(sess, cfg.results + "/model.ckpt")
+        print("Modelo salvo em: %s" % save_path)
+
+
 
 def main(argv=None):
     # cifar10.maybe_download_and_extract()

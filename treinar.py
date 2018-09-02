@@ -9,7 +9,7 @@ from modeloCnn import ConvolutionalNeuralNetwork
 def train():
     global_step = tf.train.get_or_create_global_step()
 
-    iterator = get_batch_data(cfg.dataset, cfg.batch_size, cfg.num_threads, is_training=True)
+    iterator = get_batch_data(cfg.dataset, cfg.batch_size, is_training=True)
     imagem, label = iterator.get_next()
 
     tf.summary.image('images', imagem)
@@ -28,10 +28,8 @@ def train():
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        sess.run(iterator.initializer())
+        sess.run(iterator.initializer)
         saver = tf.train.Saver()
-        coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(coord=coord)
         summary_writer = tf.summary.FileWriter(cfg.results + '/treinamento', sess.graph)
         total_batch = num_input // cfg.batch_size
         menor_erro = 1.
@@ -52,8 +50,6 @@ def train():
                 menor_erro = avg_cost
                 save_path = saver.save(sess, cfg.results + "/model.ckpt")
                 print("Modelo salvo em: %s" % save_path)
-        coord.request_stop()
-        coord.join(threads)
 
 
 def main(argv=None):

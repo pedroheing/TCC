@@ -89,24 +89,6 @@ with tf.name_scope("load_data"):
             return tf.image.rgb_to_grayscale(data), labels
         else:
             raise Exception('Dataset inválido, por favor confirme o nome do dataset:', dataset)
-"""
-with tf.name_scope("get_batch_data"):
-    def get_batch_data(dataset, batch_size, num_threads, is_training=True):
-        dados, labels = load_data(dataset, is_training)
-        dados = tf.cast(dados, tf.float32)
-        data_queues = tf.train.slice_input_producer([dados, labels])
-
-        if is_training:
-            x, y = tf.train.shuffle_batch(data_queues, num_threads=num_threads, batch_size=batch_size,
-                                          capacity=batch_size * 64,
-                                          min_after_dequeue=batch_size * 32, allow_smaller_final_batch=False)
-        else:
-            x, y = tf.train.batch(data_queues, num_threads=num_threads, batch_size=batch_size, capacity=batch_size * 64,
-                                  allow_smaller_final_batch=False)
-
-        tf.summary.image('images', x)
-        return x, y
-"""
 
 with tf.name_scope("get_batch_data"):
     def get_batch_data(dataset, batch_size, is_training=True):
@@ -122,6 +104,3 @@ with tf.name_scope("get_batch_data"):
             train_dataset = tf.data.Dataset.zip((dados, labels)).repeat().batch(batch_size)
 
         return train_dataset.make_initializable_iterator()
-
-        # tf.summary.image('images', x)
-        # return x, y
