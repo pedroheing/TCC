@@ -1,6 +1,7 @@
+"""
+This module is used to create the CNN model.
+"""
 import tensorflow as tf
-
-from config import cfg
 
 
 class ConvolutionalNeuralNetwork():
@@ -10,91 +11,123 @@ class ConvolutionalNeuralNetwork():
         self.num_caracteristicas = num_caracteristicas
         self.num_classes = num_classes
 
-    # self.__definir_hyperparametros()
+    def __conv2d(self, input, num_filters, kernel_size):
+        """
+        Return the result of a conv2d operation.
 
-    def __definir_hyperparametros(self):
-        self.num_canais = 1
-        self.num_caracteristicas = 28
-        if cfg.dataset == "fashionMNIST":
-            self.num_classes = 10
-        elif cfg.dataset == "traffic_sign":
-            self.num_classes = 62
-        else:
-            raise Exception('Dataset inválido, por favor confirme o nome do dataset:', cfg.dataset)
+        Args:
+            input: input images.
+            num_filters: number of filters to be used.
+            kernel_size: the kernel size.
+        """
+        conv = tf.layers.conv2d(inputs=input,
+                                filters=num_filters,
+                                kernel_size=kernel_size,
+                                padding="same",
+                                activation=tf.nn.relu,
+                                kernel_initializer=tf.contrib.layers.xavier_initializer())
+        return conv
 
-    def __conv2d(self, input, pesos, bias, strides=1):
-        x = tf.nn.conv2d(input, pesos, strides=[1, strides, strides, 1], padding='SAME')
-        x = tf.nn.bias_add(x, bias)
-        return tf.nn.relu(x)
+    def __maxpool2d(self, input):
+        """
+        Return the max_pooling2d operation.
 
-    def __maxpool2d(self, input, k=2):
-        return tf.nn.max_pool(input, ksize=[1, k, k, 1], strides=[1, k, k, 1], padding='SAME')
+        Args:
+            Input: the result of an conv2d operation.
+        """
+        return tf.layers.max_pooling2d(inputs=input, pool_size=[2, 2], strides=2, padding="same")
 
-    with tf.name_scope("conv_net"):
-        def construir_arquitetura(self, imagens):
+    def conv_layer(self, input, num_filters, kernel_size):
+        """
+        Return the full operation of a convolutional layer.
+
+        Args:
+            input: input images.
+            num_filters: number of filters to be used.
+            kernel_size: the kernel size.
+        """
+        conv = self.__conv2d(input, num_filters, kernel_size)
+        return self.__maxpool2d(conv)
+
+    def construir_arquitetura(self, images, labels):
+        """
+        Create the architecture for the CNN and returns its logits.
+
+        Args:
+            images: the input images.
+        """
+        with tf.name_scope("conv_net"):
+            tf.summary.image('images', images)
             with tf.name_scope("conv_net_conv1"):
-                peso1 = self.__criar_variavel("w0", [5, 5, 1, 256])
-                bias1 = self.__criar_variavel("b0", [256])
-                conv1 = self.__conv2d(imagens, peso1, bias1)
-                conv1 = self.__maxpool2d(conv1)
-            #  conv1 = tf.contrib.layers.dropout(conv1)
+                conv1 = self.conv_layer(images, 256, (5, 5))
 
             with tf.name_scope("conv_net_conv2"):
-                peso2 = self.__criar_variavel("w1", [5, 5, 256, 256])
-                bias2 = self.__criar_variavel("b1", [256])
-                conv2 = self.__conv2d(conv1, peso2, bias2)
-                conv2 = self.__maxpool2d(conv2)
-            # conv2 = tf.contrib.layers.dropout(conv2)
+                conv2 = self.conv_layer(conv1, 256, (5, 5))
 
             with tf.name_scope("conv_net_conv3"):
-                peso3 = self.__criar_variavel("w2", [5, 5, 256, 128])
-                bias3 = self.__criar_variavel("b2", [128])
-                conv3 = self.__conv2d(conv2, peso3, bias3)
-                conv3 = self.__maxpool2d(conv3)
-            #   conv3 = tf.contrib.layers.dropout(conv3)
+                conv3 = self.conv_layer(conv2, 128, (5, 5))
 
             with tf.name_scope("conv_net_fc1"):
-                peso4 = self.__criar_variavel("w3", [4 * 4 * 128, 328])
-                bias4 = self.__criar_variavel("b3", [328])
                 fc1 = tf.contrib.layers.flatten(conv3)
-                fc1 = tf.add(tf.matmul(fc1, peso4), bias4)
-                fc1 = tf.nn.relu(fc1)
-            #  fc1 = tf.contrib.layers.dropout(fc1)
+                fc1 = tf.layers.dense(fc1, units=328, activation=tf.nn.relu)
 
             with tf.name_scope("conv_net_fc2"):
-                peso5 = self.__criar_variavel("w4", [328, 192])
-                bias5 = self.__criar_variavel("b4", [192])
-                fc2 = tf.add(tf.matmul(fc1, peso5), bias5)
-                fc2 = tf.nn.relu(fc2)
-            # fc2 = tf.contrib.layers.dropout(fc2)
+                fc2 = tf.layers.dense(fc1, units=192, activation=tf.nn.relu)
 
             with tf.name_scope("conv_net_out"):
-                peso6 = self.__criar_variavel("w5", [192, self.num_classes])
-                bias6 = self.__criar_variavel("b5", [self.num_classes])
-                out = tf.add(tf.matmul(fc2, peso6), bias6)
-            #  fc3 = tf.contrib.layers.dropout(fc3)
+                out = tf.layers.dense(fc2, units=self.num_classes)
+
+            self.logits = out
+            self.labels = labels
 
             return out
 
-    with tf.name_scope("custo"):
-        def custo(self, logits, labels):
-            custo = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels))
-            tf.summary.scalar("custo", custo)
-            return custo
+    def _loss(self):
+        """
+        Return the loss of the model.
+        """
+        with tf.name_scope("custo"):
+            loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=self.logits, labels=self.labels))
+            tf.summary.scalar("custo", loss)
+            return loss
 
-    with tf.name_scope("treino"):
-        def treinar(self, custo, global_step):
-            return tf.train.AdamOptimizer().minimize(custo, global_step=global_step)
-
-    with tf.name_scope("precisao"):
-        def precisao(self, logits, labels):
-            predicao_correta = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
-            accuracy = tf.reduce_mean(tf.cast(predicao_correta, tf.float32))
+    def accuracy(self):
+        """
+        Return the accuracy of the model.
+        """
+        with tf.name_scope("precisao"):
+            correct_prediction = tf.equal(tf.argmax(self.logits, 1), tf.argmax(self.labels, 1))
+            accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             tf.summary.scalar("precisao", accuracy)
             return accuracy
 
-    with tf.name_scope("criar_variavel"):
-        def __criar_variavel(self, nome, shape):
+    def _criar_variavel(self, nome, shape):
+        """
+        Return the
+        :param nome:
+        :param shape:
+        :return:
+        """
+        with tf.name_scope("criar_variavel"):
             variavel = tf.get_variable(name=nome, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
             tf.summary.histogram(nome, variavel)
             return variavel
+
+    def train(self):
+        """
+        Train the model and return its accuracy, loss and the summary operations.
+
+        Returns:
+            total_loss: the total loss of the model.
+            accuracy: the accuracy of the model.
+            tain_ops: the operation to train the model.
+            summary_ops: the operation to merge all the summaries of the model.
+        """
+        with tf.name_scope("train"):
+            self.global_step = tf.train.get_or_create_global_step()
+            total_loss = self._loss()
+            accuracy = self.accuracy()
+            train_ops = tf.train.AdamOptimizer().minimize(total_loss, global_step=self.global_step)
+            summary_ops = tf.summary.merge_all()
+
+            return total_loss, accuracy, train_ops, summary_ops

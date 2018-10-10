@@ -1,28 +1,29 @@
+"""
+This module is used to create the CapsNet model.
+"""
 import numpy as np
 import tensorflow as tf
 
 import capslayer as cl
-from config import cfg
+from config import CFG
 
 
 class CapsNet(object):
+
     def __init__(self, height=28, width=28, channels=1, num_label=10):
-        '''
-        Args:
-            height: Integer, the height of inputs.
-            width: Integer, the width of inputs.
-            channels: Integer, the channels of inputs.
-            num_label: Integer, the category number.
-        '''
         self.height = height
         self.width = width
         self.channels = channels
         self.num_label = num_label
 
     def create_network(self, inputs, labels):
-        """ Setup capsule network.
+        """
+        Setup capsule network.
+
         Args:
-            inputs: Tensor or array with shape [batch_size, height, width, channels] or [batch_size, height * width * channels].
+            inputs: Tensor or array with shape [batch_size, height, width, channels]
+            or [batch_size, height * width * channels].
+
             labels: Tensor or array with shape [batch_size].
         Returns:
             poses: [batch_size, num_label, 16, 1].
@@ -32,7 +33,7 @@ class CapsNet(object):
         self.labels_one_hoted = tf.reshape(labels, (-1, self.num_label, 1, 1))
         self.labels = tf.argmax(labels, 1)
 
-        tf.summary.image("imagem_entrada", inputs, cfg.batch_size)
+        tf.summary.image("imagem_entrada", inputs, CFG.batch_size)
 
         with tf.variable_scope('Conv1_layer'):
             # Conv1, return with shape [batch_size, 20, 20, 256]
@@ -53,7 +54,6 @@ class CapsNet(object):
                                                             method="norm")
 
         with tf.variable_scope('DigitCaps_layer'):
-            routing_method = "DynamicRouting"
             num_inputs = np.prod(cl.shape(primaryCaps)[1:4])
             primaryCaps = tf.reshape(primaryCaps, shape=[-1, num_inputs, 8, 1])
             activation = tf.reshape(activation, shape=[-1, num_inputs])
@@ -61,12 +61,9 @@ class CapsNet(object):
                                                      activation,
                                                      num_outputs=self.num_label,
                                                      out_caps_dims=[16, 1],
-                                                     routing_method=routing_method)
+                                                     routing_method="DynamicRouting")
 
-        # Decoder structure
-        # Reconstructe the inputs with 3 FC layers
         with tf.variable_scope('Decoder'):
-            #      labels = tf.one_hot(self.labels, depth=self.num_label, axis=-1, dtype=tf.float32)
             masked_caps = tf.multiply(self.poses, self.labels_one_hoted)
             num_inputs = np.prod(masked_caps.get_shape().as_list()[1:])
             active_caps = tf.reshape(masked_caps, shape=(-1, num_inputs))
@@ -76,21 +73,39 @@ class CapsNet(object):
             self.recon_imgs = tf.layers.dense(fc2,
                                               units=num_outputs,
                                               activation=tf.sigmoid)
-            recon_imgs = tf.reshape(self.recon_imgs, shape=[-1, self.height, self.width, self.channels])
 
-            tf.summary.image("imagens_reconstruidas", recon_imgs, cfg.batch_size)
+            recon_imgs = tf.reshape(self.recon_imgs, shape=[-1,
+                                                            self.height,
+                                                            self.width,
+                                                            self.channels])
 
+            tf.summary.image("imagens_reconstruidas", recon_imgs, CFG.batch_size)
+
+        return self.poses, self.probs
+
+    def accuracy(self):
+        """
+        Return the accuracy of the model.
+
+        Returns:
+            accuracy: the accuracy of the model.
+        """
         with tf.variable_scope('accuracy'):
             logits_idx = tf.to_int32(tf.argmax(cl.softmax(self.probs, axis=1), 1))
             correct_prediction = tf.equal(tf.to_int32(self.labels), logits_idx)
             correct = tf.reduce_sum(tf.cast(correct_prediction, tf.float32))
-            self.accuracy = tf.reduce_mean(correct / tf.cast(tf.shape(self.probs)[0], tf.float32))
+            accuracy = tf.reduce_mean(correct / tf.cast(tf.shape(self.probs)[0], tf.float32))
 
-            tf.summary.scalar("precisao", self.accuracy)
-
-        return self.poses, self.probs
+            tf.summary.scalar("precisao", accuracy)
+            return accuracy
 
     def _loss(self):
+        """
+        Return the total loss of the model.
+
+        Returns:
+            total_loss: the total loss of the model.
+        """
         with tf.variable_scope("custo"):
             # 1. Margin loss
             margin_loss = cl.losses.margin_loss(logits=self.probs,
@@ -114,10 +129,20 @@ class CapsNet(object):
             return total_loss
 
     def train(self):
+        """
+        Train the model and return its accuracy, loss and the summary operations.
+
+        Returns:
+            total_loss: the total loss of the model.
+            accuracy: the accuracy of the model.
+            tain_ops: the operation to train the model.
+            summary_ops: the operation to merge all the summaries of the model.
+        """
         self.global_step = tf.train.get_or_create_global_step()
         total_loss = self._loss()
+        accuracy = self.accuracy()
         optimizer = tf.train.AdamOptimizer()
         train_ops = optimizer.minimize(total_loss, global_step=self.global_step)
         summary_ops = tf.summary.merge_all()
 
-        return (total_loss, train_ops, summary_ops)
+        return total_loss, accuracy, train_ops, summary_ops
