@@ -119,8 +119,7 @@ with tf.name_scope("get_batch_data"):
         labels = tf.data.Dataset.from_tensor_slices(labels)
 
         if is_training:
-            train_dataset = tf.data.Dataset.zip((dados, labels)).shuffle(5000).repeat(). \
-                batch(batch_size)
+            train_dataset = tf.data.Dataset.zip((dados, labels)).shuffle(5000).repeat().batch(batch_size)
         else:
             train_dataset = tf.data.Dataset.zip((dados, labels)).repeat().batch(batch_size)
 

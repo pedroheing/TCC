@@ -13,29 +13,26 @@ def avaliar():
     """
     Evaluate the CNN model.
     """
-    imagens, labels = get_batch_data(CFG.dataset, CFG.batch_size, CFG.num_threads, is_training=False)
+    iterator = get_batch_data(CFG.dataset, CFG.batch_size, is_training=False)
+    imagens, labels = iterator.get_next()
 
     num_canais, num_caracteristicas, num_classes, num_input = utils.get_model_hyperparameter(is_training=False)
 
     cnn = ConvolutionalNeuralNetwork(num_canais, num_caracteristicas, num_classes)
 
-    cnn.construir_arquitetura(imagens)
+    accuracy = cnn.evaluate(imagens, labels)
 
     with tf.Session() as sess:
         total_batch = num_input // CFG.batch_size
         avg_acc = 0.
         saver = tf.train.Saver()
         sess.run(tf.global_variables_initializer())
-        coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(coord=coord)
+        sess.run(iterator.initializer)
         saver.restore(sess, CFG.results + "/model.ckpt")
         for batch in range(total_batch):
-            acc = sess.run(cnn.accuracy())
+            acc = sess.run(accuracy)
             avg_acc += acc / total_batch
         print("accuracy: {:.5f}".format(avg_acc))
-        coord.request_stop()
-        coord.join(threads)
-
 
 def main(argv=None):
     """

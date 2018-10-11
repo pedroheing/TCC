@@ -20,9 +20,7 @@ def train():
 
     cnn = ConvolutionalNeuralNetwork(num_canais, num_caracteristicas, num_classes)
 
-    cnn.construir_arquitetura(imagem, label)
-
-    loss, accuracy, train_ops, summary_ops = cnn.train()
+    loss, accuracy, train_ops, summary_ops = cnn.train(imagem, label)
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())

@@ -21,9 +21,7 @@ def train():
 
     caps_net = CapsNet(num_caracteristicas, num_caracteristicas, num_canais, num_classes)
 
-    caps_net.create_network(imagem, label)
-
-    loss, accuracy, train_ops, summary_ops = caps_net.train()
+    loss, accuracy, train_ops, summary_ops = caps_net.train(imagem, label)
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
