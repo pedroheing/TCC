@@ -5,16 +5,17 @@ import numpy as np
 import tensorflow as tf
 
 import capslayer as cl
-from config import CFG
+from model.IModel import IModel
 
 
-class CapsNet:
+class CapsNet(IModel):
 
-    def __init__(self, height=28, width=28, channels=1, num_label=10):
+    def __init__(self, height, width, channels, num_label, batch_size):
         self.height = height
         self.width = width
         self.channels = channels
         self.num_label = num_label
+        self.batch_size = batch_size
 
     def _process_images(self, inputs, labels_one_hoted):
         """
@@ -30,7 +31,7 @@ class CapsNet:
             probs: Tensor with shape [batch_size, num_label], the probability of entity presence.
         """
 
-        tf.summary.image("imagem_entrada", inputs, CFG.batch_size)
+        tf.summary.image("imagem_entrada", inputs, self.batch_size)
 
         with tf.name_scope('Conv1_layer'):
             conv1 = tf.layers.conv2d(inputs,
@@ -41,18 +42,18 @@ class CapsNet:
                                      activation=tf.nn.relu)
 
         with tf.name_scope('PrimaryCaps_layer'):
-            primaryCaps, activation = cl.layers.primaryCaps(conv1,
-                                                            filters=32,
-                                                            kernel_size=9,
-                                                            strides=2,
-                                                            out_caps_dims=[8, 1],
-                                                            method="norm")
+            primary_caps, activation = cl.layers.primaryCaps(conv1,
+                                                             filters=32,
+                                                             kernel_size=9,
+                                                             strides=2,
+                                                             out_caps_dims=[8, 1],
+                                                             method="norm")
 
         with tf.name_scope('DigitCaps_layer'):
-            num_inputs = np.prod(cl.shape(primaryCaps)[1:4])
-            primaryCaps = tf.reshape(primaryCaps, shape=[-1, num_inputs, 8, 1])
+            num_inputs = np.prod(cl.shape(primary_caps)[1:4])
+            primary_caps = tf.reshape(primary_caps, shape=[-1, num_inputs, 8, 1])
             activation = tf.reshape(activation, shape=[-1, num_inputs])
-            poses, probs = cl.layers.dense(primaryCaps,
+            poses, probs = cl.layers.dense(primary_caps,
                                            activation,
                                            num_outputs=self.num_label,
                                            out_caps_dims=[16, 1],
@@ -74,7 +75,7 @@ class CapsNet:
                                                  self.width,
                                                  self.channels])
 
-            tf.summary.image("imagens_reconstruidas", imgs, CFG.batch_size)
+            tf.summary.image("imagens_reconstruidas", imgs, self.batch_size)
 
         return poses, probs, recon_imgs
 
@@ -156,10 +157,12 @@ class CapsNet:
             accuracy: the accuracy of the model for the given examples.
         """
         with tf.name_scope("evaluate"):
-            labels_one_hoted, labels = self._prepare_labels(labels)
-            _, probs, _ = self._process_images(images, labels_one_hoted)
+            labels_one_hotted, labels = self._prepare_labels(labels)
+            _, probs, _ = self._process_images(images, labels_one_hotted)
             accuracy = self._accuracy(probs, labels)
-            return accuracy
+            summary_ops = tf.summary.merge_all()
+
+            return accuracy, summary_ops
 
     def train(self, images, labels):
         """

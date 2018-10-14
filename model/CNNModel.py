@@ -3,15 +3,18 @@ This module is used to create the CNN model.
 """
 import tensorflow as tf
 
+from model.IModel import IModel
 
-class ConvolutionalNeuralNetwork:
 
-    def __init__(self, num_canais, num_caracteristicas, num_classes):
+class ConvolutionalNeuralNetwork(IModel):
+
+    def __init__(self, num_canais, num_caracteristicas, num_classes, batch_size):
         self.num_canais = num_canais
         self.num_caracteristicas = num_caracteristicas
         self.num_classes = num_classes
+        self.batch_size = batch_size
 
-    def __conv2d(self, input, num_filters, kernel_size):
+    def _conv2d(self, input, num_filters, kernel_size):
         """
         Return the result of a conv2d operation.
 
@@ -27,8 +30,7 @@ class ConvolutionalNeuralNetwork:
                                 filters=num_filters,
                                 kernel_size=kernel_size,
                                 padding="same",
-                                activation=tf.nn.relu,
-                                kernel_initializer=tf.contrib.layers.xavier_initializer())
+                                activation=tf.nn.relu)
         return conv
 
     def _maxpool2d(self, input):
@@ -49,7 +51,7 @@ class ConvolutionalNeuralNetwork:
             num_filters: number of filters to be used.
             kernel_size: the kernel size.
         """
-        conv = self.__conv2d(input, num_filters, kernel_size)
+        conv = self._conv2d(input, num_filters, kernel_size)
         return self._maxpool2d(conv)
 
     def _process_images(self, images, is_training):
@@ -58,11 +60,15 @@ class ConvolutionalNeuralNetwork:
 
         Args:
             images: the input images.
-            is_training: indicate if the model is training, this changes if the dropout will be used
+            is_training: indicate if the model is training, it defines if the dropout will be used
             or not.
+
+        Returns:
+            logits: the classification result of the model for the given examples without being normalized.
         """
         with tf.name_scope("conv_net"):
-            tf.summary.image('images', images)
+            tf.summary.image('images', images, self.batch_size)
+
             with tf.name_scope("conv_net_conv1"):
                 first_conv = self._conv_layer(images, 256, (5, 5))
 
@@ -72,9 +78,11 @@ class ConvolutionalNeuralNetwork:
             with tf.name_scope("conv_net_conv3"):
                 third_conv = self._conv_layer(second_conv, 128, (5, 5))
 
+            with tf.name_scope("flatted_conv"):
+                flatted_conv = tf.contrib.layers.flatten(third_conv)
+
             with tf.name_scope("conv_net_fc1"):
-                first_fc = tf.contrib.layers.flatten(third_conv)
-                first_fc = tf.layers.dense(first_fc, units=328, activation=tf.nn.relu)
+                first_fc = tf.layers.dense(flatted_conv, units=328, activation=tf.nn.relu)
 
             with tf.name_scope("conv_net_fc2"):
                 second_fc = tf.layers.dense(first_fc, units=192, activation=tf.nn.relu)
@@ -145,8 +153,9 @@ class ConvolutionalNeuralNetwork:
         """
         logits = self._process_images(images, False)
         accuracy = self._accuracy(logits, labels)
+        summary_ops = tf.summary.merge_all()
 
-        return accuracy
+        return accuracy, summary_ops
 
     def train(self, images, labels):
         """

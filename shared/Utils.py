@@ -3,7 +3,7 @@ This module is used to get the models hyperparameters and record the results.
 """
 import pandas as pd
 
-from config import CFG
+from shared.Config import CFG
 
 
 def get_model_hyperparameter(is_training):
@@ -98,46 +98,12 @@ def get_results_path_caps(is_training=True):
     return CFG.results + '/avaliacaoCaps'
 
 
-def save_results_cnn(results, is_training):
-    """
-    Saves the results of the CNN model in a CSV file.
-
-    Args:
-        results: a matrix where each row should have the value of three columns. Number of the
-        epoch, the cost and the precision.
-        is_training: a boolean indicating if the model is in the training phase.
-
-    Returns:
-        path: the path where the CSV file was saved.
-    """
-    path = get_results_path_cnn(is_training) + "/resultado.csv"
-    save_results_general(results, path)
-    return path
-
-
-def save_results_caps(results, is_training):
-    """
-    Saves the results of the CapsNet model in a CSV file.
-
-    Args:
-        results: a matrix where each row should have the value of three columns. Number of the
-        epoch, the cost and the precision.
-        is_training: a boolean indicating if the model is in the training phase.
-
-    Returns:
-        path: the path where the CSV file was saved.
-    """
-    path = get_results_path_caps(is_training) + "/resultado.csv"
-    save_results_general(results, path)
-    return path
-
-
-def save_results_general(results, path):
+def save_results(results, path):
     """
     Saves the results in a CSB file.
 
     Args:
-        results: a matrix where each row should have the value of three columns. Number of the
+        results: a matrix where each row should have the value of three columns. The number of the
         epoch, the cost and the precision.
         path: the path where the CSV file should be created.
     """
