@@ -5,7 +5,6 @@ This module is used to execute the training of the CNN model.
 import tensorflow as tf
 
 from model.CNNModel import ConvolutionalNeuralNetwork
-from shared import Utils
 from train.TrainModel import TrainModel
 
 
@@ -13,7 +12,7 @@ def train():
     """
     Train the CNN model
     """
-    result_path = Utils.get_results_path_cnn(is_training=True)
+    result_path = 'results/trainingCNN'
 
     train_model = TrainModel(ConvolutionalNeuralNetwork)
 

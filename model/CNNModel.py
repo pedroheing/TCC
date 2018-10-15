@@ -2,16 +2,17 @@
 This module is used to create the CNN model.
 """
 import tensorflow as tf
+from interface import implements
 
 from model.IModel import IModel
 
 
-class ConvolutionalNeuralNetwork(IModel):
+class ConvolutionalNeuralNetwork(implements(IModel)):
 
-    def __init__(self, num_canais, num_caracteristicas, num_classes, batch_size):
-        self.num_canais = num_canais
-        self.num_caracteristicas = num_caracteristicas
-        self.num_classes = num_classes
+    def __init__(self, num_caracteristicas, num_canais, num_classes, batch_size):
+        self.channels = num_canais
+        self.num_characteristics = num_caracteristicas
+        self.num_class = num_classes
         self.batch_size = batch_size
 
     def _conv2d(self, input, num_filters, kernel_size):
@@ -91,7 +92,7 @@ class ConvolutionalNeuralNetwork(IModel):
                 dropout = tf.layers.dropout(second_fc, rate=0.4, training=is_training)
 
             with tf.name_scope("conv_net_out"):
-                logits = tf.layers.dense(dropout, units=self.num_classes)
+                logits = tf.layers.dense(dropout, units=self.num_class)
 
             return logits
 
@@ -151,6 +152,7 @@ class ConvolutionalNeuralNetwork(IModel):
         Returns:
             accuracy: the accuracy of the model for the given examples.
         """
+        self.global_step = tf.train.get_or_create_global_step()
         logits = self._process_images(images, False)
         accuracy = self._accuracy(logits, labels)
         summary_ops = tf.summary.merge_all()

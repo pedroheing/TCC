@@ -6,7 +6,7 @@ import pandas as pd
 from shared.Config import CFG
 
 
-def get_model_hyperparameter(is_training):
+def get_model_hyperparameters():
     """
     Return the hyperparameters that will be used in the process of the model
 
@@ -22,8 +22,7 @@ def get_model_hyperparameter(is_training):
     num_channels = get_num_channels()
     num_characteristics = get_num_characteristics()
     num_classes = get_num_classes()
-    num_examples = get_num_examples_in_dataset(is_training)
-    return num_channels, num_characteristics, num_classes, num_examples
+    return num_channels, num_characteristics, num_classes
 
 
 def get_num_channels():
@@ -74,31 +73,13 @@ def get_num_examples_in_dataset(is_training):
     raise Exception('Invalid dataset name, please confirm the inserted name: ', CFG.dataset)
 
 
-def get_results_path_cnn(is_training=True):
-    """
-    Return the path of the result folder for the CNN model.
-
-    Args:
-        is_training: a boolean indicating if the model is in the training phase.
-    """
-    if is_training:
-        return CFG.results + '/treinamentoCNN'
-    return CFG.results + '/avaliacaoCNN'
+def save_results_evaluating(accuracy, path):
+    data_frame = pd.DataFrame(accuracy, columns=['Accuracy'])
+    data_frame.to_csv(path, index=False)
+    return path
 
 
-def get_results_path_caps(is_training=True):
-    """
-    Return the path of the result folder for the CapsNet model.
-
-    Args:
-        is_training: a boolean indicating if the model is in the training phase.
-    """
-    if is_training:
-        return CFG.results + '/treinamentoCaps'
-    return CFG.results + '/avaliacaoCaps'
-
-
-def save_results(results, path):
+def save_results_training(results, path):
     """
     Saves the results in a CSB file.
 
@@ -109,3 +90,4 @@ def save_results(results, path):
     """
     data_frame = pd.DataFrame(results, columns=['Epoch', 'Cost', 'Precision'])
     data_frame.to_csv(path, index=False)
+    return path

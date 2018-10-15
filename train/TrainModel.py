@@ -11,14 +11,14 @@ from shared.Input import get_batch_data
 class TrainModel:
 
     def __init__(self, model):
-        num_canais, num_caracteristicas, num_classes, num_input = Utils.get_model_hyperparameter(is_training=True)
-        self.model = model(num_canais, num_caracteristicas, num_classes, CFG.batch_size)
+        num_canais, num_caracteristicas, num_classes = Utils.get_model_hyperparameters()
+        self.model = model(num_caracteristicas, num_canais, num_classes, CFG.batch_size)
 
     def train(self, result_path):
         """
         Train the CapsNet model
         """
-        iterator = get_batch_data(CFG.dataset, CFG.batch_size, is_training=True)
+        iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=True)
         imagem, label = iterator.get_next()
         loss, accuracy, train_ops, summary_ops = self.model.train(imagem, label)
 
@@ -27,7 +27,7 @@ class TrainModel:
             sess.run(iterator.initializer)
             saver = tf.train.Saver()
             summary_writer = tf.summary.FileWriter(result_path, sess.graph)
-            total_batch = self.model.num_input // CFG.batch_size
+            total_batch = Utils.get_num_examples_in_dataset(is_training=True) // self.model.batch_size
             resultado = []
             for i in range(CFG.epoch):
                 avg_cost = 0.
@@ -42,7 +42,7 @@ class TrainModel:
                 print(
                     "Epoch " + str(i) + ", Custo= {:.6f}".format(avg_cost) + ", Precisao do treinamento= {:.5f}".format(
                         avg_acc))
-            save_path = saver.save(sess, CFG.results + "/model.ckpt")
+            save_path = saver.save(sess, result_path + "/model.ckpt")
             print("Modelo salvo em: %s" % save_path)
-            caminho = result_path + "/resultado.csv"
+            caminho = Utils.save_results_training(resultado, result_path + "/resultado.csv")
             print("CSV salvo em {}".format(caminho))

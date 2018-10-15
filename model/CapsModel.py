@@ -3,16 +3,17 @@ This module is used to create the CapsNet model.
 """
 import numpy as np
 import tensorflow as tf
+from interface import implements
 
 import capslayer as cl
 from model.IModel import IModel
 
 
-class CapsNet(IModel):
+class CapsNet(implements(IModel)):
 
-    def __init__(self, height, width, channels, num_label, batch_size):
-        self.height = height
-        self.width = width
+    def __init__(self, num_caracteristicas, channels, num_label, batch_size):
+        self.height = num_caracteristicas
+        self.width = num_caracteristicas
         self.channels = channels
         self.num_label = num_label
         self.batch_size = batch_size
@@ -157,6 +158,7 @@ class CapsNet(IModel):
             accuracy: the accuracy of the model for the given examples.
         """
         with tf.name_scope("evaluate"):
+            self.global_step = tf.train.get_or_create_global_step()
             labels_one_hotted, labels = self._prepare_labels(labels)
             _, probs, _ = self._process_images(images, labels_one_hotted)
             accuracy = self._accuracy(probs, labels)
