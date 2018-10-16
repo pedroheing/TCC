@@ -18,8 +18,9 @@ class EvaluateModel:
         """
         Evaluate the CNN model.
         """
-        iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=False)
-        imagens, labels = iterator.get_next()
+        with tf.device('/cpu:0'):
+            iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=False)
+            imagens, labels = iterator.get_next()
         accuracy, summary_ops = self.model.evaluate(imagens, labels)
 
         with tf.Session() as sess:

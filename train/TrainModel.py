@@ -1,6 +1,8 @@
 """
 This module is used to execute the training of the CapsNet model.
 """
+from datetime import datetime
+
 import tensorflow as tf
 
 from shared import Utils
@@ -18,10 +20,11 @@ class TrainModel:
         """
         Train the CapsNet model
         """
-        iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=True)
-        imagem, label = iterator.get_next()
-        loss, accuracy, train_ops, summary_ops = self.model.train(imagem, label)
+        with tf.device('/cpu:0'):
+            iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=True)
+            imagem, label = iterator.get_next()
 
+        loss, accuracy, train_ops, summary_ops = self.model.train(imagem, label)
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(iterator.initializer)
@@ -29,16 +32,24 @@ class TrainModel:
             summary_writer = tf.summary.FileWriter(result_path, sess.graph)
             total_batch = Utils.get_num_examples_in_dataset(is_training=True) // self.model.batch_size
             resultado = []
+            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+            run_metadata = tf.RunMetadata()
             for i in range(CFG.epoch):
                 avg_cost = 0.
                 avg_acc = 0.
-                for _ in range(total_batch):
+                init_time = datetime.now()
+                for e in range(total_batch):
                     _, custo, acc, summary, step = sess.run([train_ops, loss, accuracy, summary_ops,
-                                                             self.model.global_step])
+                                                             self.model.global_step], options=run_options,
+                                                            run_metadata=run_metadata)
+                    summary_writer.add_run_metadata(run_metadata, 'step%d' % step)
                     summary_writer.add_summary(summary, step)
                     avg_cost += custo / total_batch
                     avg_acc += acc / total_batch
-                resultado.append([i + 1, avg_cost, avg_acc])
+                end_time = datetime.now()
+                diff_time = end_time - init_time
+                resultado.append([i + 1, avg_cost, avg_acc, Utils.format_timestamp(init_time),
+                                  Utils.format_timestamp(end_time), str(diff_time)])
                 print(
                     "Epoch " + str(i) + ", Custo= {:.6f}".format(avg_cost) + ", Precisao do treinamento= {:.5f}".format(
                         avg_acc))

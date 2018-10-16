@@ -152,12 +152,13 @@ class ConvolutionalNeuralNetwork(implements(IModel)):
         Returns:
             accuracy: the accuracy of the model for the given examples.
         """
-        self.global_step = tf.train.get_or_create_global_step()
-        logits = self._process_images(images, False)
-        accuracy = self._accuracy(logits, labels)
-        summary_ops = tf.summary.merge_all()
+        with tf.name_scope("evaluate"):
+            self.global_step = tf.train.get_or_create_global_step()
+            logits = self._process_images(images, False)
+            accuracy = self._accuracy(logits, labels)
+            summary_ops = tf.summary.merge_all()
 
-        return accuracy, summary_ops
+            return accuracy, summary_ops
 
     def train(self, images, labels):
         """

@@ -73,6 +73,10 @@ def get_num_examples_in_dataset(is_training):
     raise Exception('Invalid dataset name, please confirm the inserted name: ', CFG.dataset)
 
 
+def format_timestamp(timestamp):
+    return timestamp.strftime('%H:%M:%S.%f')
+
+
 def save_results_evaluating(accuracy, path):
     data_frame = pd.DataFrame(accuracy, columns=['Accuracy'])
     data_frame.to_csv(path, index=False)
@@ -84,10 +88,11 @@ def save_results_training(results, path):
     Saves the results in a CSB file.
 
     Args:
-        results: a matrix where each row should have the value of three columns. The number of the
-        epoch, the cost and the precision.
+        results: a matrix where each row should have the value of six columns. The number of the
+        epoch, the cost, the precision, the initial time, the end time, and the consumed time
         path: the path where the CSV file should be created.
     """
-    data_frame = pd.DataFrame(results, columns=['Epoch', 'Cost', 'Precision'])
+    data_frame = pd.DataFrame(results, columns=['Epoch', 'Cost', 'Precision', 'Initial time', 'End time',
+                                                'Consumed time'])
     data_frame.to_csv(path, index=False)
     return path

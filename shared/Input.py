@@ -9,23 +9,24 @@ import tensorflow as tf
 from skimage import transform
 from tensorflow.examples.tutorials.mnist import input_data
 
-with tf.name_scope("read_fashionMNIST"):
-    def read_fashionMNIST(is_training=True):
-        """
-        Return the images and labels from the fashionMNIST dataset.
 
-        Args:
-            is_training: a boolean indicating if the model is in the training phase.
+def read_fashionMNIST(is_training=True):
+    """
+    Return the images and labels from the fashionMNIST dataset.
 
-        Returns:
-            train_x: the images of the dataset for training.
-            traing_Y: the labels of the dataset for training.
+    Args:
+        is_training: a boolean indicating if the model is in the training phase.
 
-            or
+    Returns:
+        train_x: the images of the dataset for training.
+        traing_Y: the labels of the dataset for training.
 
-            test_x: the images in the dataset for testing.
-            test_Y: the labels of the dataset for training.
-        """
+        or
+
+        test_x: the images in the dataset for testing.
+        test_Y: the labels of the dataset for training.
+    """
+    with tf.name_scope("read_fashionMNIST"):
         data = input_data.read_data_sets('data/fashion', one_hot=True)
         train_x = data.train.images.reshape(-1, 28, 28, 1)
         test_x = data.test.images.reshape(-1, 28, 28, 1)
@@ -37,18 +38,19 @@ with tf.name_scope("read_fashionMNIST"):
 
         return test_x, test_y
 
-with tf.name_scope("read_trafficSigns"):
-    def read_traffic_signs(is_training=True):
-        """
-        Return the images and labels from the trafficSigns dataset.
 
-        Args:
-            is_training: a boolean indicating if the model is in the training phase.
+def read_traffic_signs(is_training=True):
+    """
+    Return the images and labels from the trafficSigns dataset.
 
-        Returns:
-            images: the images from the dataset without any treatment.
-            labels: the labels from the dataset withou any tratment.
-        """
+    Args:
+        is_training: a boolean indicating if the model is in the training phase.
+
+    Returns:
+        images: the images from the dataset without any treatment.
+        labels: the labels from the dataset without any treatment.
+    """
+    with tf.name_scope("read_trafficSigns"):
         data_directory = "data/traffic/"
 
         if is_training:
@@ -70,22 +72,23 @@ with tf.name_scope("read_trafficSigns"):
                 labels.append(int(d))
         return images, labels
 
-with tf.name_scope("load_data"):
-    def load_data(dataset, is_training=True):
-        """
-        Return the imagens and labels from the dataset.
 
-        Args:
-            dataset: name of the dataset.
-            is_training: a boolean indicating if the model is in the training phase.
+def load_data(dataset, is_training=True):
+    """
+    Return the imagens and labels from the dataset.
 
-        Returns:
-            images: the images of the dataset treated.
-            labels: the labels fot he dataset treated.
+    Args:
+        dataset: name of the dataset.
+        is_training: a boolean indicating if the model is in the training phase.
 
-        Raises:
-            invalid_dataset: the dataset's name is invalid.
-        """
+    Returns:
+        images: the images of the dataset treated.
+        labels: the labels one-hotted fot he dataset treated.
+
+    Raises:
+        invalid_dataset: the dataset's name is invalid.
+    """
+    with tf.name_scope("load_data"):
         if dataset == 'fashionMNIST':
             return read_fashionMNIST(is_training)
         if dataset == 'traffic_sign':
@@ -96,22 +99,23 @@ with tf.name_scope("load_data"):
             return tf.image.rgb_to_grayscale(data), labels
         raise Exception('Dataset inválido, por favor confirme o nome do dataset:', dataset)
 
-with tf.name_scope("get_batch_data"):
-    def get_batch_data(dataset, batch_size, is_training=True):
-        """
-        Return the initializable iterator to get the batches of the dataset.
 
-        Args:
-            dataset: the name of the dataset.
-            batch_size: the size of the batch.
-            is_training: a boolean indicating if the model is in the training phase.
+def get_batch_data(dataset, batch_size, is_training=True):
+    """
+    Return the initializable iterator to get the batches of the dataset.
 
-        Returns:
-            An initializable itaretor to get the batches of the dataset.
+    Args:
+        dataset: the name of the dataset.
+        batch_size: the size of the batch.
+        is_training: a boolean indicating if the model is in the training phase.
 
-        Raises:
-            invalid_dataset: the dataset's name is invalid.
-        """
+    Returns:
+        An initializable itaretor to get the batches of the dataset.
+
+    Raises:
+        invalid_dataset: the dataset's name is invalid.
+    """
+    with tf.name_scope("get_batch_data"):
         dados, labels = load_data(dataset, is_training)
         dados = tf.cast(dados, tf.float32)
         labels = tf.cast(labels, tf.float32)
@@ -119,8 +123,8 @@ with tf.name_scope("get_batch_data"):
         labels = tf.data.Dataset.from_tensor_slices(labels)
 
         if is_training:
-            train_dataset = tf.data.Dataset.zip((dados, labels)).shuffle(5000).repeat().batch(batch_size)
+            dataset = tf.data.Dataset.zip((dados, labels)).shuffle(5000).repeat().batch(batch_size)
         else:
-            train_dataset = tf.data.Dataset.zip((dados, labels)).repeat().batch(batch_size)
+            dataset = tf.data.Dataset.zip((dados, labels)).repeat().batch(batch_size)
 
-        return train_dataset.make_initializable_iterator()
+        return dataset.make_initializable_iterator()
