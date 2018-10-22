@@ -18,6 +18,9 @@ class EvaluateModel:
         """
         Evaluate the CNN model.
         """
+        result_path += CFG.result_dir
+        restore_path += CFG.restore_dir
+
         with tf.device('/cpu:0'):
             iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=False)
             imagens, labels = iterator.get_next()

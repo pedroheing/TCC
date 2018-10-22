@@ -20,6 +20,8 @@ class TrainModel:
         """
         Train the CapsNet model
         """
+        result_path += CFG.result_dir
+
         with tf.device('/cpu:0'):
             iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=True)
             imagem, label = iterator.get_next()
@@ -32,17 +34,13 @@ class TrainModel:
             summary_writer = tf.summary.FileWriter(result_path, sess.graph)
             total_batch = Utils.get_num_examples_in_dataset(is_training=True) // self.model.batch_size
             resultado = []
-            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-            run_metadata = tf.RunMetadata()
             for i in range(CFG.epoch):
                 avg_cost = 0.
                 avg_acc = 0.
                 init_time = datetime.now()
                 for e in range(total_batch):
                     _, custo, acc, summary, step = sess.run([train_ops, loss, accuracy, summary_ops,
-                                                             self.model.global_step], options=run_options,
-                                                            run_metadata=run_metadata)
-                    summary_writer.add_run_metadata(run_metadata, 'step%d' % step)
+                                                             self.model.global_step])
                     summary_writer.add_summary(summary, step)
                     avg_cost += custo / total_batch
                     avg_acc += acc / total_batch

@@ -27,7 +27,7 @@ def read_fashionMNIST(is_training=True):
         test_Y: the labels of the dataset for training.
     """
     with tf.name_scope("read_fashionMNIST"):
-        data = input_data.read_data_sets('data/fashion', one_hot=True)
+        data = input_data.read_data_sets('data/fashion', one_hot=True, validation_size=0)
         train_x = data.train.images.reshape(-1, 28, 28, 1)
         test_x = data.test.images.reshape(-1, 28, 28, 1)
         train_y = data.train.labels
@@ -122,9 +122,10 @@ def get_batch_data(dataset, batch_size, is_training=True):
         dados = tf.data.Dataset.from_tensor_slices(dados)
         labels = tf.data.Dataset.from_tensor_slices(labels)
 
-        if is_training:
-            dataset = tf.data.Dataset.zip((dados, labels)).shuffle(5000).repeat().batch(batch_size)
-        else:
-            dataset = tf.data.Dataset.zip((dados, labels)).repeat().batch(batch_size)
+        with tf.device('/cpu:0'):
+            if is_training:
+                dataset = tf.data.Dataset.zip((dados, labels)).shuffle(5000).repeat().batch(batch_size).prefetch(1)
+            else:
+                dataset = tf.data.Dataset.zip((dados, labels)).repeat().batch(batch_size).prefetch(1)
 
         return dataset.make_initializable_iterator()

@@ -31,52 +31,40 @@ class CapsNet(implements(IModel)):
             poses: [batch_size, num_label, 16, 1].
             probs: Tensor with shape [batch_size, num_label], the probability of entity presence.
         """
+        with tf.name_scope("caps_net"):
+            tf.summary.image("imagem_entrada", inputs, self.batch_size)
 
-        tf.summary.image("imagem_entrada", inputs, self.batch_size)
+            with tf.name_scope('Conv1_layer'):
+                conv1 = tf.layers.conv2d(inputs, filters=256, kernel_size=9, strides=1, padding='VALID',
+                                         activation=tf.nn.relu)
 
-        with tf.name_scope('Conv1_layer'):
-            conv1 = tf.layers.conv2d(inputs,
-                                     filters=256,
-                                     kernel_size=9,
-                                     strides=1,
-                                     padding='VALID',
-                                     activation=tf.nn.relu)
+            with tf.name_scope('PrimaryCaps_layer'):
+                primary_caps, activation = cl.layers.primaryCaps(conv1, filters=32, kernel_size=9, strides=2,
+                                                                 out_caps_dims=[8, 1])
 
-        with tf.name_scope('PrimaryCaps_layer'):
-            primary_caps, activation = cl.layers.primaryCaps(conv1,
-                                                             filters=32,
-                                                             kernel_size=9,
-                                                             strides=2,
-                                                             out_caps_dims=[8, 1],
-                                                             method="norm")
+            with tf.name_scope('ClassCaps_layer'):
+                # cl.shape(primary_caps) = [<tf.Tensor 'train/ClassCaps_layer/shape_1/strided_slice:0' shape=() dtype=int32>, 6, 6, 32, 8, 1]
+                # cl.shape(primary_caps)[1:4] = [6, 6, 32]
+                # num_inputs = 1152
+                num_inputs = np.prod(cl.shape(primary_caps)[1:4])
+                primary_caps = tf.reshape(primary_caps, shape=[-1, num_inputs, 8, 1])
+                activation = tf.reshape(activation, shape=[-1, num_inputs])
+                # The routing goes three times and return the result
+                poses, probs = cl.layers.dense(primary_caps, activation, num_outputs=self.num_label,
+                                               out_caps_dims=[16, 1],
+                                               routing_method="DynamicRouting")
 
-        with tf.name_scope('DigitCaps_layer'):
-            num_inputs = np.prod(cl.shape(primary_caps)[1:4])
-            primary_caps = tf.reshape(primary_caps, shape=[-1, num_inputs, 8, 1])
-            activation = tf.reshape(activation, shape=[-1, num_inputs])
-            poses, probs = cl.layers.dense(primary_caps,
-                                           activation,
-                                           num_outputs=self.num_label,
-                                           out_caps_dims=[16, 1],
-                                           routing_method="DynamicRouting")
+            with tf.name_scope('Decoder'):
+                masked_caps = tf.multiply(poses, labels_one_hoted)
+                num_inputs = np.prod(masked_caps.get_shape().as_list()[1:])
+                active_caps = tf.reshape(masked_caps, shape=(-1, num_inputs))
+                fc1 = tf.layers.dense(active_caps, units=512, activation=tf.nn.relu)
+                fc2 = tf.layers.dense(fc1, units=1024, activation=tf.nn.relu)
+                num_outputs = self.height * self.width * self.channels
+                recon_imgs = tf.layers.dense(fc2, units=num_outputs, activation=tf.sigmoid)
+                imgs = tf.reshape(recon_imgs, shape=[-1, self.height, self.width, self.channels])
 
-        with tf.name_scope('Decoder'):
-            masked_caps = tf.multiply(poses, labels_one_hoted)
-            num_inputs = np.prod(masked_caps.get_shape().as_list()[1:])
-            active_caps = tf.reshape(masked_caps, shape=(-1, num_inputs))
-            fc1 = tf.layers.dense(active_caps, units=512, activation=tf.nn.relu)
-            fc2 = tf.layers.dense(fc1, units=1024, activation=tf.nn.relu)
-            num_outputs = self.height * self.width * self.channels
-            recon_imgs = tf.layers.dense(fc2,
-                                         units=num_outputs,
-                                         activation=tf.sigmoid)
-
-            imgs = tf.reshape(recon_imgs, shape=[-1,
-                                                 self.height,
-                                                 self.width,
-                                                 self.channels])
-
-            tf.summary.image("imagens_reconstruidas", imgs, self.batch_size)
+                tf.summary.image("imagens_reconstruidas", imgs, self.batch_size)
 
         return poses, probs, recon_imgs
 
@@ -110,23 +98,22 @@ class CapsNet(implements(IModel)):
             total_loss: the total loss of the model.
         """
         with tf.name_scope("custo"):
-            # 1. Margin loss
-            margin_loss = cl.losses.margin_loss(logits=probs,
-                                                labels=tf.squeeze(labels_one_hotted, axis=(2, 3)))
-
+            # Margin loss
+            margin_loss = cl.losses.margin_loss(logits=probs, labels=tf.squeeze(labels_one_hotted, axis=(2, 3)))
             tf.summary.scalar("custo_classificacao", margin_loss)
-            # 2. The reconstruction loss
+
+            # Reconstruction loss
             origin = tf.reshape(images, shape=(-1, self.height * self.width * self.channels))
             squared = tf.square(recon_imgs - origin)
-            reconstruction_err = tf.reduce_mean(squared)
-
+            reconstruction_err = tf.reduce_sum(squared)
             tf.summary.scalar("custo_reconstrucao", reconstruction_err)
+
             # 3. Total loss
             # The paper uses sum of squared error as reconstruction error, but we
             # have used reduce_mean in `# 2 The reconstruction loss` to calculate
             # mean squared error. In order to keep in line with the paper,the
             # regularization scale should be 0.0005*784=0.392
-            total_loss = margin_loss + 0.392 * reconstruction_err
+            total_loss = margin_loss + 0.0005 * reconstruction_err
 
             tf.summary.scalar("custo_total", total_loss)
             return total_loss

@@ -27,10 +27,7 @@ class ConvolutionalNeuralNetwork(implements(IModel)):
         Return:
             conv: the result of as conv2d operation.
         """
-        conv = tf.layers.conv2d(inputs=input,
-                                filters=num_filters,
-                                kernel_size=kernel_size,
-                                padding="same",
+        conv = tf.layers.conv2d(inputs=input, filters=num_filters, kernel_size=kernel_size, padding="same",
                                 activation=tf.nn.relu)
         return conv
 
@@ -124,22 +121,11 @@ class ConvolutionalNeuralNetwork(implements(IModel)):
             accuracy: the accuracy of the model, varying between 0 and 1.
         """
         with tf.name_scope("precisao"):
-            correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
+            pred = tf.nn.softmax(logits)
+            correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(labels, 1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
             tf.summary.scalar("precisao", accuracy)
             return accuracy
-
-    def _criar_variavel(self, nome, shape):
-        """
-        Return the
-        :param nome:
-        :param shape:
-        :return:
-        """
-        with tf.name_scope("criar_variavel"):
-            variavel = tf.get_variable(name=nome, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
-            tf.summary.histogram(nome, variavel)
-            return variavel
 
     def evaluate(self, images, labels):
         """
@@ -180,6 +166,8 @@ class ConvolutionalNeuralNetwork(implements(IModel)):
             total_loss = self._loss(logits, labels)
             accuracy = self._accuracy(logits, labels)
             train_ops = tf.train.AdamOptimizer().minimize(total_loss, global_step=self.global_step)
+            for var in tf.trainable_variables():
+                tf.summary.histogram(var.name, var)
             summary_ops = tf.summary.merge_all()
 
             return total_loss, accuracy, train_ops, summary_ops

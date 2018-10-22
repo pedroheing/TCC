@@ -12,7 +12,7 @@ def train():
     """
     Train the CNN model
     """
-    result_path = 'results/trainingCNN'
+    result_path = 'results/'
 
     train_model = TrainModel(ConvolutionalNeuralNetwork)
 

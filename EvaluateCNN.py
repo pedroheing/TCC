@@ -11,13 +11,11 @@ def evaluate():
     """
     Evaluate the CNN model.
     """
-    result_path = 'results/evaluationCNN'
-
-    restore_path = 'results/trainingCNN'
+    path = 'results/'
 
     eval = EvaluateModel(ConvolutionalNeuralNetwork)
 
-    eval.evaluate(result_path, restore_path)
+    eval.evaluate(path, path)
 
 
 def main(argv=None):

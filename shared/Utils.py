@@ -17,7 +17,7 @@ def get_model_hyperparameters():
         num_channels: the number of channels of the imagens in the dataset.
         num_characteristics: the number of characteristics in each image of the dataset.
         num_classes: the number of possible classification classes.
-        num_examples: the number of imagens in the dataset.
+        num_examples: the number of imagens in the dataset.get_model_hyperparameter
     """
     num_channels = get_num_channels()
     num_characteristics = get_num_characteristics()
@@ -64,7 +64,7 @@ def get_num_examples_in_dataset(is_training):
     """
     if CFG.dataset == "fashionMNIST":
         if is_training:
-            return 55000
+            return 60000
         return 10000
     if CFG.dataset == 'traffic_sign':
         if is_training:
