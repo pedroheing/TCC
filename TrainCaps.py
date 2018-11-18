@@ -15,7 +15,7 @@ def train():
 
     train_model = TrainModel(CapsNet)
 
-    train_model.train(result_path)
+    train_model.train(result_path, result_path)
 
 
 def main(argv=None):

@@ -34,7 +34,7 @@ class TrainModel:
             sess.run(iterator.initializer)
             saver = tf.train.Saver()
             summary_writer = tf.summary.FileWriter(result_path, sess.graph)
-            total_batch = Utils.get_num_examples_in_dataset(is_training=True) // self.model.batch_size
+            total_batch = math.ceil(Utils.get_num_examples_in_dataset(is_training=True) / self.model.batch_size)
             resultado = []
             for i in range(CFG.epoch):
                 avg_cost, avg_acc, avg_err = 0., 0., 0.
