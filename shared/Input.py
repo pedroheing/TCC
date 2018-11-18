@@ -7,6 +7,7 @@ import numpy as np
 import skimage.data
 import tensorflow as tf
 from skimage import transform
+from sklearn.utils import shuffle
 from tensorflow.examples.tutorials.mnist import input_data
 
 
@@ -34,6 +35,7 @@ def read_fashionMNIST(is_training=True):
         test_y = data.test.labels
 
         if is_training:
+            train_x, train_y = shuffle_dataset(train_x, train_y)
             return train_x, train_y
 
         return test_x, test_y
@@ -95,8 +97,9 @@ def load_data(dataset, is_training=True):
             data, label = read_traffic_signs(is_training)
             data = [transform.resize(image, (28, 28)) for image in data]
             data = np.array(data)
+            data = tf.image.rgb_to_grayscale(data)
             labels = tf.one_hot(label, depth=62, dtype=tf.float32)
-            return tf.image.rgb_to_grayscale(data), labels
+            return data, labels
         raise Exception('Dataset inválido, por favor confirme o nome do dataset:', dataset)
 
 
@@ -116,16 +119,17 @@ def get_batch_data(dataset, batch_size, is_training=True):
         invalid_dataset: the dataset's name is invalid.
     """
     with tf.name_scope("get_batch_data"):
-        dados, labels = load_data(dataset, is_training)
-        dados = tf.cast(dados, tf.float32)
-        labels = tf.cast(labels, tf.float32)
-        dados = tf.data.Dataset.from_tensor_slices(dados)
-        labels = tf.data.Dataset.from_tensor_slices(labels)
-
         with tf.device('/cpu:0'):
+            dados, labels = load_data(dataset, is_training)
+            dados = tf.cast(dados, tf.float32)
+            size = dados.get_shape()[0]
+            labels = tf.cast(labels, tf.float32)
+            dados = tf.data.Dataset.from_tensor_slices(dados)
+            labels = tf.data.Dataset.from_tensor_slices(labels)
+
             if is_training:
-                dataset = tf.data.Dataset.zip((dados, labels)).shuffle(5000).repeat().batch(batch_size).prefetch(1)
+                dataset = tf.data.Dataset.zip((dados, labels)).shuffle(size).repeat().batch(batch_size).prefetch(1)
             else:
                 dataset = tf.data.Dataset.zip((dados, labels)).repeat().batch(batch_size).prefetch(1)
 
-        return dataset.make_initializable_iterator()
+            return dataset.make_initializable_iterator()

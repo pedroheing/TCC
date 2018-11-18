@@ -93,6 +93,12 @@ class ConvolutionalNeuralNetwork(implements(IModel)):
 
             return logits
 
+    def _error_rate(self, accuracy):
+        with tf.name_scope("error_rate"):
+            error_rate = 1. - accuracy
+            tf.summary.scalar("error_rate", error_rate)
+            return error_rate
+
     def _loss(self, logits, labels):
         """
         Return the loss of the model.
@@ -104,9 +110,9 @@ class ConvolutionalNeuralNetwork(implements(IModel)):
         Returns:
             loss: the loss of the model.
         """
-        with tf.name_scope("custo"):
+        with tf.name_scope("loss"):
             loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels))
-            tf.summary.scalar("custo", loss)
+            tf.summary.scalar("loss", loss)
             return loss
 
     def _accuracy(self, logits, labels):
@@ -120,11 +126,11 @@ class ConvolutionalNeuralNetwork(implements(IModel)):
         Returns:
             accuracy: the accuracy of the model, varying between 0 and 1.
         """
-        with tf.name_scope("precisao"):
+        with tf.name_scope("accuracy"):
             pred = tf.nn.softmax(logits)
             correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(labels, 1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-            tf.summary.scalar("precisao", accuracy)
+            tf.summary.scalar("accuracy", accuracy)
             return accuracy
 
     def evaluate(self, images, labels):
@@ -142,9 +148,10 @@ class ConvolutionalNeuralNetwork(implements(IModel)):
             self.global_step = tf.train.get_or_create_global_step()
             logits = self._process_images(images, False)
             accuracy = self._accuracy(logits, labels)
+            error_rate = self._error_rate(accuracy)
             summary_ops = tf.summary.merge_all()
 
-            return accuracy, summary_ops
+            return accuracy, error_rate, summary_ops
 
     def train(self, images, labels):
         """
@@ -165,9 +172,10 @@ class ConvolutionalNeuralNetwork(implements(IModel)):
             logits = self._process_images(images, True)
             total_loss = self._loss(logits, labels)
             accuracy = self._accuracy(logits, labels)
+            error_rate = self._error_rate(accuracy)
             train_ops = tf.train.AdamOptimizer().minimize(total_loss, global_step=self.global_step)
             for var in tf.trainable_variables():
                 tf.summary.histogram(var.name, var)
             summary_ops = tf.summary.merge_all()
 
-            return total_loss, accuracy, train_ops, summary_ops
+            return total_loss, accuracy, error_rate, train_ops, summary_ops

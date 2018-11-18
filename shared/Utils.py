@@ -74,11 +74,12 @@ def get_num_examples_in_dataset(is_training):
 
 
 def format_timestamp(timestamp):
-    return timestamp.strftime('%H:%M:%S.%f')
+    return timestamp.strftime('%H:%M:%S')
 
 
-def save_results_evaluating(accuracy, path):
-    data_frame = pd.DataFrame(accuracy, columns=['Accuracy'])
+def save_results_evaluating(result, path):
+    data_frame = pd.DataFrame([result], columns=['Accuracy', 'Error rate', 'Initial time', 'End time',
+                                                 'Consumed time'])
     data_frame.to_csv(path, index=False)
     return path
 
@@ -92,7 +93,7 @@ def save_results_training(results, path):
         epoch, the cost, the precision, the initial time, the end time, and the consumed time
         path: the path where the CSV file should be created.
     """
-    data_frame = pd.DataFrame(results, columns=['Epoch', 'Cost', 'Precision', 'Initial time', 'End time',
+    data_frame = pd.DataFrame(results, columns=['Epoch', 'Cost', 'Precision', 'Error rate', 'Initial time', 'End time',
                                                 'Consumed time'])
     data_frame.to_csv(path, index=False)
     return path

@@ -1,6 +1,8 @@
 """
 This module is used to execute the training of the CapsNet model.
 """
+
+import math
 from datetime import datetime
 
 import tensorflow as tf
@@ -26,7 +28,7 @@ class TrainModel:
             iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=True)
             imagem, label = iterator.get_next()
 
-        loss, accuracy, train_ops, summary_ops = self.model.train(imagem, label)
+        loss, accuracy, error_rate, train_ops, summary_ops = self.model.train(imagem, label)
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(iterator.initializer)
@@ -35,19 +37,19 @@ class TrainModel:
             total_batch = Utils.get_num_examples_in_dataset(is_training=True) // self.model.batch_size
             resultado = []
             for i in range(CFG.epoch):
-                avg_cost = 0.
-                avg_acc = 0.
+                avg_cost, avg_acc, avg_err = 0., 0., 0.
                 init_time = datetime.now()
-                for e in range(total_batch):
-                    _, custo, acc, summary, step = sess.run([train_ops, loss, accuracy, summary_ops,
-                                                             self.model.global_step])
+                for _ in range(total_batch):
+                    _, custo, acc, err, summary, step = sess.run([train_ops, loss, accuracy, error_rate, summary_ops,
+                                                                  self.model.global_step])
                     summary_writer.add_summary(summary, step)
                     avg_cost += custo / total_batch
                     avg_acc += acc / total_batch
+                    avg_err += err / total_batch
                 end_time = datetime.now()
                 diff_time = end_time - init_time
-                resultado.append([i + 1, avg_cost, avg_acc, Utils.format_timestamp(init_time),
-                                  Utils.format_timestamp(end_time), str(diff_time)])
+                resultado.append([i + 1, avg_cost, avg_acc, avg_err, Utils.format_timestamp(init_time),
+                                  Utils.format_timestamp(end_time), str(diff_time).split('.', 2)[0]])
                 print(
                     "Epoch " + str(i) + ", Custo= {:.6f}".format(avg_cost) + ", Precisao do treinamento= {:.5f}".format(
                         avg_acc))
