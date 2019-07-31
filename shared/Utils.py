@@ -6,7 +6,7 @@ import pandas as pd
 from shared.Config import CFG
 
 
-def get_model_hyperparameter(is_training):
+def get_model_hyperparameters():
     """
     Return the hyperparameters that will be used in the process of the model
 
@@ -17,13 +17,12 @@ def get_model_hyperparameter(is_training):
         num_channels: the number of channels of the imagens in the dataset.
         num_characteristics: the number of characteristics in each image of the dataset.
         num_classes: the number of possible classification classes.
-        num_examples: the number of imagens in the dataset.
+        num_examples: the number of imagens in the dataset.get_model_hyperparameter
     """
     num_channels = get_num_channels()
     num_characteristics = get_num_characteristics()
     num_classes = get_num_classes()
-    num_examples = get_num_examples_in_dataset(is_training)
-    return num_channels, num_characteristics, num_classes, num_examples
+    return num_channels, num_characteristics, num_classes
 
 
 def get_num_channels():
@@ -65,7 +64,7 @@ def get_num_examples_in_dataset(is_training):
     """
     if CFG.dataset == "fashionMNIST":
         if is_training:
-            return 55000
+            return 60000
         return 10000
     if CFG.dataset == 'traffic_sign':
         if is_training:
@@ -74,38 +73,27 @@ def get_num_examples_in_dataset(is_training):
     raise Exception('Invalid dataset name, please confirm the inserted name: ', CFG.dataset)
 
 
-def get_results_path_cnn(is_training=True):
-    """
-    Return the path of the result folder for the CNN model.
-
-    Args:
-        is_training: a boolean indicating if the model is in the training phase.
-    """
-    if is_training:
-        return CFG.results + '/treinamentoCNN'
-    return CFG.results + '/avaliacaoCNN'
+def format_timestamp(timestamp):
+    return timestamp.strftime('%H:%M:%S')
 
 
-def get_results_path_caps(is_training=True):
-    """
-    Return the path of the result folder for the CapsNet model.
-
-    Args:
-        is_training: a boolean indicating if the model is in the training phase.
-    """
-    if is_training:
-        return CFG.results + '/treinamentoCaps'
-    return CFG.results + '/avaliacaoCaps'
+def save_results_evaluating(result, path):
+    data_frame = pd.DataFrame([result], columns=['Accuracy', 'Error rate', 'Initial time', 'End time',
+                                               'Consumed time'])
+    data_frame.to_csv(path, index=False)
+    return path
 
 
-def save_results(results, path):
+def save_results_training(results, path):
     """
     Saves the results in a CSB file.
 
     Args:
-        results: a matrix where each row should have the value of three columns. The number of the
-        epoch, the cost and the precision.
+        results: a matrix where each row should have the value of six columns. The number of the
+        epoch, the cost, the precision, the initial time, the end time, and the consumed time
         path: the path where the CSV file should be created.
     """
-    data_frame = pd.DataFrame(results, columns=['Epoch', 'Cost', 'Precision'])
+    data_frame = pd.DataFrame(results, columns=['Epoch', 'Cost', 'Precision', 'Error rate', 'Initial time', 'End time',
+                                                'Consumed time'])
     data_frame.to_csv(path, index=False)
+    return path

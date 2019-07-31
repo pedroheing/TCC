@@ -5,25 +5,24 @@ import tensorflow as tf
 
 from evaluate.EvaluateModel import EvaluateModel
 from model.CNNModel import ConvolutionalNeuralNetwork
-from shared import Utils
 
 
-def avaliar():
+def evaluate():
     """
     Evaluate the CNN model.
     """
-    result_path = Utils.get_results_path_cnn(is_training=False)
+    path = 'results/'
 
     eval = EvaluateModel(ConvolutionalNeuralNetwork)
 
-    eval.evaluate(result_path)
+    eval.evaluate(path, path)
 
 
 def main(argv=None):
     """
     Initiate the evaluation.
     """
-    avaliar()
+    evaluate()
 
 
 if __name__ == "__main__":
