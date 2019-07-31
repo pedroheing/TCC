@@ -3,15 +3,16 @@ This module is used to create the CNN model.
 """
 import tensorflow as tf
 
+from interface import implements
 from model.IModel import IModel
 
 
-class ConvolutionalNeuralNetwork(IModel):
+class ConvolutionalNeuralNetwork(implements(IModel)):
 
-    def __init__(self, num_canais, num_caracteristicas, num_classes, batch_size):
-        self.num_canais = num_canais
-        self.num_caracteristicas = num_caracteristicas
-        self.num_classes = num_classes
+    def __init__(self, num_caracteristicas, num_canais, num_classes, batch_size):
+        self.channels = num_canais
+        self.num_characteristics = num_caracteristicas
+        self.num_class = num_classes
         self.batch_size = batch_size
 
     def _conv2d(self, input, num_filters, kernel_size):
@@ -26,10 +27,7 @@ class ConvolutionalNeuralNetwork(IModel):
         Return:
             conv: the result of as conv2d operation.
         """
-        conv = tf.layers.conv2d(inputs=input,
-                                filters=num_filters,
-                                kernel_size=kernel_size,
-                                padding="same",
+        conv = tf.layers.conv2d(inputs=input, filters=num_filters, kernel_size=kernel_size, padding="same",
                                 activation=tf.nn.relu)
         return conv
 
@@ -40,7 +38,7 @@ class ConvolutionalNeuralNetwork(IModel):
         Args:
             Input: the result of an conv2d operation.
         """
-        return tf.layers.max_pooling2d(inputs=input, pool_size=[2, 2], strides=2, padding="same")
+        return tf.layers.max_pooling2d(inputs=input, pool_size=[2, 2], strides=2,  padding="same")
 
     def _conv_layer(self, input, num_filters, kernel_size):
         """
@@ -91,9 +89,15 @@ class ConvolutionalNeuralNetwork(IModel):
                 dropout = tf.layers.dropout(second_fc, rate=0.4, training=is_training)
 
             with tf.name_scope("conv_net_out"):
-                logits = tf.layers.dense(dropout, units=self.num_classes)
+                logits = tf.layers.dense(dropout, units=self.num_class)
 
             return logits
+
+    def _error_rate(self, accuracy):
+        with tf.name_scope("error_rate"):
+            error_rate = 1. - accuracy
+            tf.summary.scalar("error_rate", error_rate)
+            return error_rate
 
     def _loss(self, logits, labels):
         """
@@ -106,9 +110,9 @@ class ConvolutionalNeuralNetwork(IModel):
         Returns:
             loss: the loss of the model.
         """
-        with tf.name_scope("custo"):
+        with tf.name_scope("loss"):
             loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels))
-            tf.summary.scalar("custo", loss)
+            tf.summary.scalar("loss", loss)
             return loss
 
     def _accuracy(self, logits, labels):
@@ -122,23 +126,12 @@ class ConvolutionalNeuralNetwork(IModel):
         Returns:
             accuracy: the accuracy of the model, varying between 0 and 1.
         """
-        with tf.name_scope("precisao"):
-            correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
+        with tf.name_scope("accuracy"):
+            pred = tf.nn.softmax(logits)
+            correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(labels, 1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-            tf.summary.scalar("precisao", accuracy)
+            tf.summary.scalar("accuracy", accuracy)
             return accuracy
-
-    def _criar_variavel(self, nome, shape):
-        """
-        Return the
-        :param nome:
-        :param shape:
-        :return:
-        """
-        with tf.name_scope("criar_variavel"):
-            variavel = tf.get_variable(name=nome, shape=shape, initializer=tf.contrib.layers.xavier_initializer())
-            tf.summary.histogram(nome, variavel)
-            return variavel
 
     def evaluate(self, images, labels):
         """
@@ -151,11 +144,14 @@ class ConvolutionalNeuralNetwork(IModel):
         Returns:
             accuracy: the accuracy of the model for the given examples.
         """
-        logits = self._process_images(images, False)
-        accuracy = self._accuracy(logits, labels)
-        summary_ops = tf.summary.merge_all()
+        with tf.name_scope("evaluate"):
+            self.global_step = tf.train.get_or_create_global_step()
+            logits = self._process_images(images, False)
+            accuracy = self._accuracy(logits, labels)
+            error_rate = self._error_rate(accuracy)
+            summary_ops = tf.summary.merge_all()
 
-        return accuracy, summary_ops
+            return accuracy, error_rate, summary_ops
 
     def train(self, images, labels):
         """
@@ -176,7 +172,10 @@ class ConvolutionalNeuralNetwork(IModel):
             logits = self._process_images(images, True)
             total_loss = self._loss(logits, labels)
             accuracy = self._accuracy(logits, labels)
+            error_rate = self._error_rate(accuracy)
             train_ops = tf.train.AdamOptimizer().minimize(total_loss, global_step=self.global_step)
+            for var in tf.trainable_variables():
+                tf.summary.histogram(var.name, var)
             summary_ops = tf.summary.merge_all()
 
-            return total_loss, accuracy, train_ops, summary_ops
+            return total_loss, accuracy, error_rate, train_ops, summary_ops
