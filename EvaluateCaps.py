@@ -7,7 +7,7 @@ from evaluate.EvaluateModel import EvaluateModel
 from model.CapsModel import CapsNet
 
 
-def avaliar():
+def evaluate():
     """
     Evaluate the CapsNet model.
     """
@@ -24,7 +24,7 @@ def main(argv=None):
     """
     Initiate the evaluation.
     """
-    avaliar()
+    evaluate()
 
 
 if __name__ == "__main__":
