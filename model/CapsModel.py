@@ -41,12 +41,9 @@ class CapsNet(implements(IModel)):
                                                                  out_caps_dims=[8, 1])
 
             with tf.name_scope('classCaps_layer'):
-<<<<<<< HEAD
                 # cl.shape(primary_caps) = [<tf.Tensor 'train/ClassCaps_layer/shape_1/strided_slice:0' shape=() dtype=int32>, 6, 6, 32, 8, 1]
                 # cl.shape(primary_caps)[1:4] = [6, 6, 32]
                 # num_inputs = 1152
-=======
->>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
                 num_inputs = np.prod(cl.shape(primary_caps)[1:4])
                 primary_caps = tf.reshape(primary_caps, shape=[-1, num_inputs, 8, 1])
                 activation = tf.reshape(activation, shape=[-1, num_inputs])
@@ -74,11 +71,7 @@ class CapsNet(implements(IModel)):
             error_rate = 1. - accuracy
             tf.summary.scalar("error_rate", error_rate)
             return error_rate
-<<<<<<< HEAD
     
-=======
-
->>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
     def _accuracy(self, probs, labels):
         """
         Return the accuracy of the model.
@@ -163,8 +156,4 @@ class CapsNet(implements(IModel)):
             train_ops = optimizer.minimize(total_loss, global_step=self.global_step)
             summary_ops = tf.summary.merge_all()
 
-<<<<<<< HEAD
             return total_loss, accuracy, error_rate, train_ops, summary_ops
-=======
-            return total_loss, accuracy, error_rate, train_ops, summary_ops
->>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff

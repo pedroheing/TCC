@@ -24,30 +24,18 @@ class EvaluateModel:
         Evaluate the CNN model.
         """
         result_path += CFG.result_dir
-<<<<<<< HEAD
         print("result_path: {}".format(result_path))
         restore_path += CFG.restore_dir
         print("restore_path: {}".format(restore_path))
-=======
-        restore_path += CFG.restore_dir
->>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
 
         with tf.device('/cpu:0'):
             iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=False)
             imagens, labels = iterator.get_next()
-<<<<<<< HEAD
         accuracy, error_rate, summary_ops = self.model.evaluate(imagens, labels)
 
         with tf.Session() as sess:
             total_batch = math.ceil(Utils.get_num_examples_in_dataset(is_training=False) / self.model.batch_size)
             print("Total batch {}".format(total_batch))
-=======
-
-        accuracy, error_rate, summary_ops = self.model.evaluate(imagens, labels)
-
-        with tf.Session() as sess:
-            total_batch = math.ceil(Utils.get_num_examples_in_dataset(is_training=True) / self.model.batch_size)
->>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
             avg_acc, avg_err = 0., 0.
             saver = tf.train.Saver()
             sess.run(tf.global_variables_initializer())
@@ -63,11 +51,7 @@ class EvaluateModel:
             end_time = datetime.now()
             diff_time = end_time - init_time
             print("accuracy: {:.5f} error rate: {:.5f}".format(avg_acc, avg_err))
-<<<<<<< HEAD
             path = Utils.save_results_evaluating([avg_acc, avg_err,  Utils.format_timestamp(init_time),
-=======
-            path = Utils.save_results_evaluating([avg_acc, avg_err, Utils.format_timestamp(init_time),
->>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
                                                   Utils.format_timestamp(end_time), str(diff_time).split('.', 2)[0]],
                                                  result_path + "/resultado.csv")
             print("CSV salvo em {}".format(path))

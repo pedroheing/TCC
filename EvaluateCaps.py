@@ -11,15 +11,9 @@ def evaluate():
     """
     Evaluate the CapsNet model.
     """
-<<<<<<< HEAD
     result_path = 'results/'
 
     restore_path = 'results/'
-=======
-    result_path = 'results/evaluationCaps'
-
-    restore_path = 'results/trainingCaps'
->>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
 
     eval = EvaluateModel(CapsNet)
 
