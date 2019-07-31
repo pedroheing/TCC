@@ -7,13 +7,19 @@ from evaluate.EvaluateModel import EvaluateModel
 from model.CapsModel import CapsNet
 
 
-def avaliar():
+def evaluate():
     """
     Evaluate the CapsNet model.
     """
+<<<<<<< HEAD
     result_path = 'results/'
 
     restore_path = 'results/'
+=======
+    result_path = 'results/evaluationCaps'
+
+    restore_path = 'results/trainingCaps'
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
 
     eval = EvaluateModel(CapsNet)
 
@@ -24,7 +30,7 @@ def main(argv=None):
     """
     Initiate the evaluation.
     """
-    avaliar()
+    evaluate()
 
 
 if __name__ == "__main__":

@@ -8,12 +8,14 @@ import tensorflow as tf
 import random
 
 from skimage import transform
+from sklearn.utils import shuffle
 from tensorflow.examples.tutorials.mnist import input_data
 
 
 def read_fashionMNIST(is_training=True):
     """
     Return the images and labels from the fashionMNIST dataset.
+<<<<<<< HEAD
 
     Args:
         is_training: a boolean indicating if the model is in the training phase.
@@ -24,6 +26,18 @@ def read_fashionMNIST(is_training=True):
 
         or
 
+=======
+
+    Args:
+        is_training: a boolean indicating if the model is in the training phase.
+
+    Returns:
+        train_x: the images of the dataset for training.
+        traing_Y: the labels of the dataset for training.
+
+        or
+
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
         test_x: the images in the dataset for testing.
         test_Y: the labels of the dataset for training.
     """
@@ -35,6 +49,7 @@ def read_fashionMNIST(is_training=True):
         test_y = data.test.labels
 
         if is_training:
+            train_x, train_y = shuffle_dataset(train_x, train_y)
             return train_x, train_y
 
         return test_x, test_y
@@ -43,10 +58,17 @@ def read_fashionMNIST(is_training=True):
 def read_traffic_signs(is_training=True):
     """
     Return the images and labels from the trafficSigns dataset.
+<<<<<<< HEAD
 
     Args:
         is_training: a boolean indicating if the model is in the training phase.
 
+=======
+
+    Args:
+        is_training: a boolean indicating if the model is in the training phase.
+
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
     Returns:
         images: the images from the dataset without any treatment.
         labels: the labels from the dataset without any treatment.
@@ -78,6 +100,7 @@ def read_traffic_signs(is_training=True):
 def load_data(dataset, is_training=True):
     """
     Return the imagens and labels from the dataset.
+<<<<<<< HEAD
 
     Args:
         dataset: name of the dataset.
@@ -87,6 +110,17 @@ def load_data(dataset, is_training=True):
         images: the images of the dataset treated.
         labels: the labels one-hotted fot he dataset treated.
 
+=======
+
+    Args:
+        dataset: name of the dataset.
+        is_training: a boolean indicating if the model is in the training phase.
+
+    Returns:
+        images: the images of the dataset treated.
+        labels: the labels one-hotted fot he dataset treated.
+
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
     Raises:
         invalid_dataset: the dataset's name is invalid.
     """
@@ -97,11 +131,16 @@ def load_data(dataset, is_training=True):
             data, label = read_traffic_signs(is_training)
             data = [transform.resize(image, (28, 28)) for image in data]
             data = np.array(data)
+            data = tf.image.rgb_to_grayscale(data)
             labels = tf.one_hot(label, depth=62, dtype=tf.float32)
-            return tf.image.rgb_to_grayscale(data), labels
+            return data, labels
         raise Exception('Dataset inválido, por favor confirme o nome do dataset:', dataset)
 
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
 def get_batch_data(dataset, batch_size, is_training=True):
     """
     Return the initializable iterator to get the batches of the dataset.
@@ -122,7 +161,10 @@ def get_batch_data(dataset, batch_size, is_training=True):
             dados, labels = load_data(dataset, is_training)
             dados = tf.cast(dados, tf.float32)
             size = dados.get_shape()[0]
+<<<<<<< HEAD
             print("size: {}".format(size))
+=======
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
             labels = tf.cast(labels, tf.float32)
             dados = tf.data.Dataset.from_tensor_slices(dados)
             labels = tf.data.Dataset.from_tensor_slices(labels)

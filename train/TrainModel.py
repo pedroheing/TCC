@@ -1,6 +1,11 @@
 """
 This module is used to execute the training of the CapsNet model.
 """
+<<<<<<< HEAD
+=======
+
+import math
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
 from datetime import datetime
 
 import tensorflow as tf
@@ -22,9 +27,12 @@ class TrainModel:
         Train the CapsNet model
         """
         result_path += CFG.result_dir
+<<<<<<< HEAD
         print("result_path: {}".format(result_path))
         restore_path += CFG.restore_dir
         print("restore_path: {}".format(restore_path))
+=======
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
 
         with tf.device('/cpu:0'):
             iterator = get_batch_data(CFG.dataset, self.model.batch_size, is_training=True)
@@ -36,10 +44,14 @@ class TrainModel:
             sess.run(iterator.initializer)
             saver = tf.train.Saver()
             summary_writer = tf.summary.FileWriter(result_path, sess.graph)
+<<<<<<< HEAD
             if restore_path != 'results/':
                 saver.restore(sess, restore_path + "/model.ckpt")
             total_batch = math.ceil(Utils.get_num_examples_in_dataset(is_training=True) / self.model.batch_size)
             print("Total batch {}".format(total_batch))
+=======
+            total_batch = math.ceil(Utils.get_num_examples_in_dataset(is_training=True) / self.model.batch_size)
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
             resultado = []
             for i in range(CFG.epoch):
                 avg_cost, avg_acc, avg_err = 0., 0., 0.

@@ -79,7 +79,11 @@ def format_timestamp(timestamp):
 
 def save_results_evaluating(result, path):
     data_frame = pd.DataFrame([result], columns=['Accuracy', 'Error rate', 'Initial time', 'End time',
+<<<<<<< HEAD
                                                'Consumed time'])
+=======
+                                                 'Consumed time'])
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
     data_frame.to_csv(path, index=False)
     return path
 

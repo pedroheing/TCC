@@ -11,7 +11,11 @@ def train():
     """
     Train the CapsNet model
     """
+<<<<<<< HEAD
     result_path = 'results/'
+=======
+    result_path = 'results/trainingCaps'
+>>>>>>> 77c759207b6ac061903ac4009d1e04092c07c4ff
 
     train_model = TrainModel(CapsNet)
 
