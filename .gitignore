@@ -105,10 +105,5 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-<<<<<<< HEAD
 capslayer
 data
-=======
-data
-capslayer
->>>>>>> 7fb35acf8aa87e47ec812deeb8d7e12b302cd88a
