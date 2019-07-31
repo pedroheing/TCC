@@ -2,7 +2,6 @@
 This module is used to create the CNN model.
 """
 import tensorflow as tf
-from interface import implements
 
 from interface import implements
 from model.IModel import IModel

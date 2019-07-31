@@ -1,9 +1,6 @@
 """
 This module is used to evaluate the CNN model.
 """
-import math
-from datetime import datetime
-
 import tensorflow as tf
 import math
 

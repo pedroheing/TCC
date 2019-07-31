@@ -8,7 +8,6 @@ import tensorflow as tf
 import random
 
 from skimage import transform
-from sklearn.utils import shuffle
 from tensorflow.examples.tutorials.mnist import input_data
 
 
@@ -36,7 +35,6 @@ def read_fashionMNIST(is_training=True):
         test_y = data.test.labels
 
         if is_training:
-            train_x, train_y = shuffle_dataset(train_x, train_y)
             return train_x, train_y
 
         return test_x, test_y
@@ -99,9 +97,8 @@ def load_data(dataset, is_training=True):
             data, label = read_traffic_signs(is_training)
             data = [transform.resize(image, (28, 28)) for image in data]
             data = np.array(data)
-            data = tf.image.rgb_to_grayscale(data)
             labels = tf.one_hot(label, depth=62, dtype=tf.float32)
-            return data, labels
+            return tf.image.rgb_to_grayscale(data), labels
         raise Exception('Dataset inválido, por favor confirme o nome do dataset:', dataset)
 
         
